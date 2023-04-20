@@ -1,0 +1,50 @@
+<form action="http://localhost:3000/api/albums" method="POST" target="_blank" id="postForm">
+    <input placeholder="Title" type="text" id="title" name="title">
+    <input placeholder="Artist" type="text" id="artist" name="artist">
+    <input placeholder="Year" type="text" id="year" name="year">
+    <input type="submit" value="Submit">
+</form>
+
+<table id="albumsTable">
+    <thead>
+        <tr>
+            <th>TITLE</th>
+            <th>ARTIST</th>
+            <th>YEAR</th>
+            <th>_ID</th>
+        </tr>
+    </thead>
+    <tbody id="albumsTableBody"></tbody>
+</table>
+
+
+<script>
+    const form = document.querySelector('#postForm');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.querySelector('#title').value;
+        const artist = document.querySelector('#artist').value;
+        const year = document.querySelector('#year').value;
+
+        const requestData = {
+            title: title,
+            artist: artist,
+            year: year,
+        };
+
+        const response = await fetch('/api/albums', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData),
+        });
+        const responseData = await response.json();
+        alert(responseData.message);
+    });
+
+
+
+
+</script>
