@@ -7,9 +7,8 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = process.env.CONNECTION_URL;
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -18,21 +17,16 @@ const client = new MongoClient(uri, {
     }
 });
 
-
-// Get index.html
-// sendFile will go here
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, '/public/index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// Start server
 app.listen(process.env.PORT, () => console.log('Example app is listening on port 3000.'));
 
 app.get('/api/albums', async (req, res) => {
-    console.log(await getAllAlbums())
     const albumsData = await getAllAlbums();
     res.send(albumsData);
-})
+});
 
 app.get('/api/albums/:title', async (req, res) => {
     const title = req.params.title;
@@ -46,11 +40,8 @@ app.get('/api/albums/:title', async (req, res) => {
 
 app.post('/api/albums', async (req, res) => {
     const { title, artist, year } = req.body;
-    console.log(`Title: ${title}, Artist: ${artist}, Year: ${year}`);
+    console.log(title, artist, year);
 
-
-    console.log(await isAlbumInDatabase(title, artist, year))
-    // Check if album exists in db
     if (await isAlbumInDatabase(title, artist, year)) {
         const message = 'Status: 409 Album already exists';
         return res.status(409).json({ message });
@@ -62,13 +53,23 @@ app.post('/api/albums', async (req, res) => {
     }
 });
 
+app.delete('/api/albums/:id', async (req, res) => {
+    const id = req.body
+    if (isAlbumInDatabase(id)) {
+        deleteAlbumFromDatabase(id)
+        const message = 'Album has been deleted from database';
+        return res.status(201).json({ message });
+    }
+    else {
+        const message = 'Status: 404 Album does not exist in database';
+        return res.status(404).json({ message });
+    }
+
+})
 
 async function getAllAlbums() {
     try {
         await client.connect();
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
         const cursor = client.db("MusicAlbums").collection("Albums").find();
         const results = await cursor.toArray();
 
@@ -83,9 +84,6 @@ async function getAllAlbums() {
 async function getAlbumByTitle(title) {
     try {
         await client.connect();
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
         const query = { title: title };
         const albumData = await client.db("MusicAlbums").collection("Albums").find(query).toArray();
 
@@ -124,6 +122,25 @@ async function isAlbumInDatabase(title, artist, year) {
     }
 }
 
+async function deleteAlbumFromDatabase(id) {
+    console.log(id)
+    try {
+        await client.connect();
+        const query = { _id: new ObjectId(id) };
+        const result = await client.db("MusicAlbums").collection("Albums").deleteOne(query);
+
+        if (result.deletedCount === 1) {
+            console.log("Successfully deleted the document with the specified ID.");
+        } else {
+            console.log("No document found with the specified ID.");
+        }
+    } catch (error) {
+        console.log(error);
+    } finally {
+        await client.close();
+    }
+}
+
 async function addAlbumToDatabase(title, artist, year) {
     try {
         const database = client.db("MusicAlbums");
@@ -137,9 +154,7 @@ async function addAlbumToDatabase(title, artist, year) {
         console.log(`A document was inserted with the _id: ${result.insertedId}`);
 
     } finally {
-
         await client.close();
-
     }
 }
 

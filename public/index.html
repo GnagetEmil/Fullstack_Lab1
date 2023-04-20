@@ -1,50 +1,130 @@
-<form action="http://localhost:3000/api/albums" method="POST" target="_blank" id="postForm">
-    <input placeholder="Title" type="text" id="title" name="title">
-    <input placeholder="Artist" type="text" id="artist" name="artist">
-    <input placeholder="Year" type="text" id="year" name="year">
-    <input type="submit" value="Submit">
-</form>
+<!DOCTYPE html>
+<html lang="en">
 
-<table id="albumsTable">
-    <thead>
-        <tr>
-            <th>TITLE</th>
-            <th>ARTIST</th>
-            <th>YEAR</th>
-            <th>_ID</th>
-        </tr>
-    </thead>
-    <tbody id="albumsTableBody"></tbody>
-</table>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albums</title>
+</head>
 
+<body>
+    <h1>Add New Album</h1>
+    <form action="http://localhost:3000/api/albums" method="POST" target="_blank" id="postForm">
+        <input placeholder="Title" type="text" id="title" name="title">
+        <input placeholder="Artist" type="text" id="artist" name="artist">
+        <input placeholder="Year" type="text" id="year" name="year">
+        <input type="submit" value="Submit">
+    </form>
+    <br><br><br>
 
-<script>
-    const form = document.querySelector('#postForm');
+    <table id="albumsTable">
+        <thead>
+            <tr>
+                <th>TITLE</th>
+                <th>ARTIST</th>
+                <th>YEAR</th>
+                <th>_ID</th>
+            </tr>
+        </thead>
+        <tbody id="albumsTableBody"></tbody>
+    </table>
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = document.querySelector('#title').value;
-        const artist = document.querySelector('#artist').value;
-        const year = document.querySelector('#year').value;
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchAlbums);
 
-        const requestData = {
-            title: title,
-            artist: artist,
-            year: year,
-        };
+        const form = document.querySelector('#postForm');
 
-        const response = await fetch('/api/albums', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestData),
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.querySelector('#title').value;
+            const artist = document.querySelector('#artist').value;
+            const year = document.querySelector('#year').value;
+
+            const requestData = {
+                title: title,
+                artist: artist,
+                year: year,
+            };
+
+            const response = await fetch('/api/albums', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            });
+            const responseData = await response.json();
+            alert(responseData.message);
+
+            if (response.ok) {
+                fetchAlbums();
+            }
         });
-        const responseData = await response.json();
-        alert(responseData.message);
-    });
+
+        async function fetchAlbums() {
+            const response = await fetch('/api/albums');
+            const albums = await response.json();
+
+            const tableBody = document.querySelector('#albumsTableBody');
+            tableBody.innerHTML = '';
+
+            for (const album of albums) {
+                const row = document.createElement('tr');
+
+                const titleCell = document.createElement('td');
+                titleCell.textContent = album.title;
+                row.appendChild(titleCell);
+
+                const artistCell = document.createElement('td');
+                artistCell.textContent = album.artist_name;
+                row.appendChild(artistCell);
+
+                const yearCell = document.createElement('td');
+                yearCell.textContent = album.year;
+                row.appendChild(yearCell);
+
+                const idCell = document.createElement('td');
+                idCell.textContent = album._id;
+                row.appendChild(idCell);
+
+                const updateButton = document.createElement('button');
+                updateButton.textContent = "Update"
+                updateButton.addEventListener('click', () => updateAlbum(album._id));
+                row.appendChild(updateButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = "Delete"
+                deleteButton.addEventListener('click', () => deleteAlbum(album._id));
+                row.appendChild(deleteButton);
 
 
 
+                tableBody.appendChild(row);
+            }
+        }
+        async function deleteAlbum(albumId) {
+            try {
+                const response = await fetch('/api/albums/:id', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: albumId }),
+                });
+                const responseData = await response.json();
+                alert(responseData.message);
+                fetchAlbums();
 
-</script>
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function updateAlbum(albumId) {
+
+        }
+    </script>
+</body>
+
+</html>
