@@ -29,6 +29,19 @@
         <tbody id="albumsTableBody"></tbody>
     </table>
 
+    <br><br><br><br>
+
+    <div id="updateDiv" style="display:none">
+        <h1>Update Album</h1>
+        <form action="http://localhost:3000/api/albums" method="PUT" target="_blank" id="updateForm">
+            <input placeholder="Title" type="text" id="updateTitle" name="title">
+            <input placeholder="Artist" type="text" id="updateArtist" name="artist">
+            <input placeholder="Year" type="text" id="updateYear" name="year">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', fetchAlbums);
 
@@ -103,7 +116,12 @@
             }
         }
         async function deleteAlbum(albumId) {
+
             try {
+                const isDelete = window.confirm("Delete album?");
+                if (!isDelete) {
+                    return;
+                }
                 const response = await fetch('/api/albums/:id', {
                     method: 'DELETE',
                     headers: {
@@ -115,13 +133,47 @@
                 alert(responseData.message);
                 fetchAlbums();
 
-
             } catch (error) {
                 console.error('Error:', error);
             }
         }
 
         async function updateAlbum(albumId) {
+            document.getElementById("updateDiv").style.display = "inline";
+            document.querySelector('#updateForm').dataset.albumId = albumId;
+
+            const form = document.querySelector('#updateForm');
+            const updateForm = document.querySelector('#updateForm');
+            updateForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const albumId = updateForm.dataset.albumId; // Get albumId from the dataset
+                const title = document.querySelector('#updateTitle').value;
+                const artist_name = document.querySelector('#updateArtist').value;
+                const year = document.querySelector('#updateYear').value;
+
+                const requestData = {
+                    title: title,
+                    artist_name: artist_name,
+                    year: year,
+                    id: albumId
+                };
+
+                console.log(requestData)
+                const response = await fetch('/api/albums/:id', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                });
+                const responseData = await response.json();
+                alert(responseData.message);
+
+                if (response.ok) {
+                    fetchAlbums();
+                }
+            });
 
         }
     </script>

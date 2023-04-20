@@ -67,6 +67,28 @@ app.delete('/api/albums/:id', async (req, res) => {
 
 })
 
+app.put('/api/albums/:id', async (req, res) => {
+    const album = req.body;
+    const id = req.body.id
+    console.log(album);
+
+    try {
+        await client.connect();
+        const idToChange = { _id: new ObjectId(id) };
+        const newDocument = { $set: album };
+        const result = await client
+            .db('MusicAlbums')
+            .collection('Albums')
+            .updateOne(idToChange, newDocument);
+        res.json({ message: 'Album updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update album' });
+    } finally {
+        await client.close();
+    }
+})
+
 async function getAllAlbums() {
     try {
         await client.connect();
