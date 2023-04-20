@@ -76,7 +76,7 @@ app.put('/api/albums/:id', async (req, res) => {
         await client.connect();
         const idToChange = { _id: new ObjectId(id) };
         const newDocument = { $set: album };
-        const result = await client
+        await client
             .db('MusicAlbums')
             .collection('Albums')
             .updateOne(idToChange, newDocument);
